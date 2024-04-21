@@ -1,0 +1,26 @@
+---
+import ArrowIcon from "@/components/ArrowIcon.astro";
+interface Prop extends HTMLButtonElement {}
+
+const { class: className, ...props } = Astro.props;
+---
+
+<button class:list={["btn-primary", className]} {...props}>
+  <ArrowIcon size="100%" />
+</button>
+
+<style>
+  .btn-primary {
+    @apply bg-primary-purple
+    hover:scale-105
+    hover:shadow-md
+    transition-all
+    max-w-20
+    max-h-20
+    grid
+    place-content-center
+    text-custom-white
+    p-4
+    rounded-full;
+  }
+</style>

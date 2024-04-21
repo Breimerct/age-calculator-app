@@ -1,0 +1,38 @@
+---
+interface Prop extends HTMLInputElement {}
+
+const { class: className, ...props } = Astro.props;
+---
+
+<input class:list={["date-input", className]} {...props} />
+
+<script>
+  import { $ } from "@/lib/dom-selector";
+
+  const $input = $<HTMLInputElement>("input");
+
+  $input.addEventListener("input", function (event: InputEvent) {
+    const inputTarget = event.target as HTMLInputElement;
+  });
+</script>
+
+<style>
+  .date-input {
+    @apply shadow-sm
+    focus:border-smokey-grey
+    hover:border-smokey-grey
+    text-off-black
+    uppercase
+    border-2
+    outline-none
+    min-h-20
+    text-4xl
+    font-bold
+    font-poppins
+    px-4
+    w-full
+    max-w-48
+    rounded-md
+    transition-colors;
+  }
+</style>

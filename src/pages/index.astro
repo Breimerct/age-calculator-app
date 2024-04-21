@@ -1,0 +1,290 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Input from "@/components/Input.astro";
+import ActionButton from "@/components/ActionButton.astro";
+---
+
+<Layout title="age calculator">
+  <main
+    class="shadow-xl relative rounded-br-[10rem] rounded-xl bg-custom-white p-10 md:max-w-[90%] mx-auto"
+  >
+    <section class="form-section">
+      <form id="birthday-form" class="grid grid-cols-12 gap-4 relative">
+        <div class="form-control md:col-span-4 col-span-6" data-input="day">
+          <label class="form-label" for="day">Día</label>
+          <Input id="day" name="day" placeholder="DD" maxlength="2" />
+          <span class="error-msg hidden"> error </span>
+        </div>
+
+        <div class="form-control md:col-span-4 col-span-6" data-input="month">
+          <label class="form-label" for="month">Mes</label>
+          <Input id="month" name="month" placeholder="MM" maxlength="2" />
+          <span class="error-msg hidden"> error </span>
+        </div>
+
+        <div class="form-control md:col-span-4 col-span-12" data-input="year">
+          <label class="form-label" for="year">Año</label>
+          <Input id="year" name="year" placeholder="YYYY" maxlength="4" />
+          <span class="error-msg hidden"> error </span>
+        </div>
+      </form>
+
+      <ActionButton id="submit-btn" class="btn-absolute" />
+    </section>
+
+    <section class="w-full md:mt-24 mt-28 px-4 flex flex-col gap-4">
+      <div class="result">
+        <span id="result-year"> -- </span>
+        <p>Años</p>
+      </div>
+
+      <div class="result">
+        <span id="result-month"> -- </span>
+        <p>Meses</p>
+      </div>
+
+      <div class="result">
+        <span id="result-day"> -- </span>
+        <p>Días</p>
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<script>
+  import { INPUTS } from "@/helpers/constans";
+  import { $, $$ } from "@/lib/dom-selector";
+  import { calculateAgeDifference } from "@/helpers/util";
+
+  let isDayValid = true;
+  let isMonthValid = true;
+  let isYearValid = true;
+  let isValidInput = true;
+
+  const $birthdayForm = $<HTMLFormElement>("#birthday-form");
+  const $submitBtn = $<HTMLButtonElement>("#submit-btn");
+  const $dateInputs = $$<HTMLInputElement>(".date-input");
+  const $resultYear = $("#result-year");
+  const $resultMonth = $("#result-month");
+  const $resultDay = $("#result-day");
+
+  for (const $input of $dateInputs) {
+    $input.addEventListener("keyup", function (event) {
+      const target = event.target as HTMLInputElement;
+      const $formControl = target.closest(".form-control");
+      const $errorMsg = $formControl.querySelector(".error-msg");
+
+      if (!/^\d*$/.test(target.value.trim())) {
+        isValidInput = false;
+        $formControl.classList.add("form-error");
+        $errorMsg.classList.remove("hidden");
+        $errorMsg.textContent = "Solo números.";
+        return;
+      } else if (+target.value <= 0) {
+        isValidInput = false;
+        $formControl.classList.add("form-error");
+        $errorMsg.classList.remove("hidden");
+        $errorMsg.textContent = "Min #1";
+        return;
+      } else {
+        isValidInput = true;
+        $formControl.classList.remove("form-error");
+        $errorMsg.classList.add("hidden");
+        $errorMsg.textContent = "";
+      }
+
+      if (target.value && target.name === INPUTS.DAY) {
+        if (+target.value > 31) {
+          isDayValid = false;
+          $formControl.classList.add("form-error");
+          $errorMsg.classList.remove("hidden");
+          $errorMsg.textContent = "Max #31";
+          return;
+        }
+
+        if (target.value.length > 2) {
+          isDayValid = false;
+          $formControl.classList.add("form-error");
+          $errorMsg.classList.remove("hidden");
+          $errorMsg.textContent = "Maximo 2 digitos";
+          return;
+        }
+
+        isDayValid = true;
+        $formControl.classList.remove("form-error");
+        $errorMsg.classList.add("hidden");
+        $errorMsg.textContent = "";
+      }
+
+      if (target.value && target.name === INPUTS.MONTH) {
+        if (+target.value > 12) {
+          isMonthValid = false;
+          $formControl.classList.add("form-error");
+          $errorMsg.classList.remove("hidden");
+          $errorMsg.textContent = "Max #12";
+          return;
+        }
+
+        if (target.value.length > 2) {
+          isMonthValid = false;
+          $formControl.classList.add("form-error");
+          $errorMsg.classList.remove("hidden");
+          $errorMsg.textContent = "Maximo 2 digitos";
+          return;
+        }
+
+        isMonthValid = true;
+        $formControl.classList.remove("form-error");
+        $errorMsg.classList.add("hidden");
+        $errorMsg.textContent = "";
+      }
+
+      if (target.value && target.name === INPUTS.YEAR) {
+        if (+target.value > new Date().getFullYear()) {
+          isYearValid = false;
+          $formControl.classList.add("form-error");
+          $errorMsg.classList.remove("hidden");
+          $errorMsg.textContent = "max 2024";
+          return;
+        }
+
+        if (target.value.length > 4) {
+          isYearValid = false;
+          $formControl.classList.add("form-error");
+          $errorMsg.classList.remove("hidden");
+          $errorMsg.textContent = "Maximo 2 digitos";
+          return;
+        }
+
+        if (target.value.length < 4) {
+          isYearValid = false;
+          $formControl.classList.add("form-error");
+          $errorMsg.classList.remove("hidden");
+          $errorMsg.textContent = "Min 4 digitos";
+          return;
+        }
+
+        isYearValid = true;
+        $formControl.classList.remove("form-error");
+        $errorMsg.classList.add("hidden");
+        $errorMsg.textContent = "";
+      }
+    });
+  }
+
+  $submitBtn.addEventListener("click", (e: FormDataEvent) => {
+    e.preventDefault();
+    const form = new FormData($birthdayForm);
+    const date = form.get("day");
+    const month = form.get("month");
+    const year = form.get("year");
+    const inputDate = `${year}-${month}-${date}`;
+
+    if (isDayValid && isMonthValid && isYearValid && isValidInput) {
+      let isNotEmptyFieldsAndInvalidDate = true;
+      for (const $input of $dateInputs) {
+        const $formControl = $input.closest(".form-control");
+        const $errorMsg = $formControl.querySelector(".error-msg");
+
+        if ($input.value.length <= 0) {
+          $formControl.classList.add("form-error");
+          $errorMsg.classList.remove("hidden");
+          $errorMsg.textContent = "campo requerido";
+          isNotEmptyFieldsAndInvalidDate = false;
+        } else if (new Date(inputDate) > new Date()) {
+          $formControl.classList.add("form-error");
+          $errorMsg.classList.remove("hidden");
+          $errorMsg.textContent = "fecha invalida.";
+          isNotEmptyFieldsAndInvalidDate = false;
+        } else {
+          $formControl.classList.remove("form-error");
+          $errorMsg.classList.add("hidden");
+          $errorMsg.textContent = "";
+          isNotEmptyFieldsAndInvalidDate = true;
+        }
+      }
+
+      if (isNotEmptyFieldsAndInvalidDate) {
+        const ageDifference = calculateAgeDifference(inputDate);
+
+        $resultYear.textContent = ageDifference.years.toString();
+        $resultMonth.textContent = ageDifference.months.toString();
+        $resultDay.textContent = ageDifference.days.toString();
+      }
+    }
+  });
+</script>
+
+<style>
+  .form-section {
+    @apply md:pr-32
+    relative
+    after:h-[2px]
+    after:w-full
+    after:md:max-w-[80%]
+    after:md:left-0
+    after:md:translate-x-[initial]
+    after:md:bottom-[-60%]
+    after:bottom-[-26%]
+    after:max-w-[95%]
+    after:mt-10
+    after:bg-light-grey
+    after:inline-block
+    after:absolute
+    after:left-[-50%]
+    after:translate-x-[55%];
+  }
+
+  .form-control {
+    @apply flex
+    flex-col
+    relative
+    w-full;
+  }
+
+  .btn-absolute {
+    @apply absolute
+    md:top-[60%]
+    top-[78%]
+    md:right-[20%]
+    right-[50%]
+    translate-x-[50%]
+    translate-y-[82%]
+    z-10;
+  }
+
+  .result {
+    @apply text-5xl md:text-7xl
+    transition-all
+    font-extrabold
+    font-poppins
+    italic
+    flex
+    flex-nowrap
+    gap-2;
+  }
+
+  .result p {
+    @apply mb-0 text-off-black;
+  }
+
+  .result span {
+    @apply text-primary-purple;
+  }
+
+  .form-label {
+    @apply text-smokey-grey
+    font-bold
+    font-poppins
+    tracking-[4px]
+    uppercase;
+  }
+
+  .error-msg {
+    @apply absolute bottom-[-10%] translate-y-[50%] text-xs;
+  }
+
+  .form-error > * {
+    @apply text-light-red border-light-red hover:border-light-red focus:border-light-red !important;
+  }
+</style>
